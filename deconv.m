@@ -34,6 +34,7 @@ for t = 1:TL
 end;
 Et(TL:T,3) = Et(TL,2);
 
+% Paint graphs
 clf;
 subp(3,2,1,0.01);
 imsc(H);

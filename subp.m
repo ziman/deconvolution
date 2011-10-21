@@ -1,5 +1,6 @@
+% Subplots with adjustable border width.
 function ax = subp(rows,cols,ix,border)
-	ax = subplot(rows,cols,ix);
+	ax = subplot(rows,cols,ix);:
 	w = 1.0 / cols;
 	h = 1.0 / rows;
 	l = w * mod(ix-1, cols);
