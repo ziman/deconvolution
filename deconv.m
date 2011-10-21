@@ -3,25 +3,27 @@ rows = 100; cols = 100;
 H = 0.05 * rand(rows,cols);
 H(40,60) = 1;
 H(70,10) = 1;
-H = imread('/home/ziman/mswin/fb/arianne-perrier/ari.png');
+H = imread('lena100.jpg');
 
 % Input to the algorithm:
 M = ones(1,20);	% Convolution kernel
 M = M/sum(M);
-%M = gkern(8, 8, 2, 2);
+%M = gkern(10, 10, 3, 3);
 C = filter2(M,H);	% Convolved image
 
 % Iterative deconvolution
-e = 0.45;
-T = 1000;
-G = zeros(rows,cols);
+e = 0.2;
+T = 300;
+G = ones(rows,cols);
 Et = zeros(T,1);
+MC = filter2(M,C);
 for t = 1:T
-	GC = filter2(M,G);	% convolve our guess
-	E = C - GC;		% error of the convolution
-	G = G + e*filter2(M,E);	% correct the error
-	G(G < 0) = 0;		% prevent fourier antibalance
-	Et(t) = sum(sum(E .* E));
+	G = G .* (MC ./ filter2(M,filter2(M,G)));
+	%GC = filter2(M,G);	% convolve our guess
+	%E = C - GC;		% error of the convolution
+	%G = G + e*filter2(M,E);	% correct the error
+	%G(G < 0) = 0;		% prevent fourier antibalance
+	%Et(t) = sum(sum(E .* E));
 end;
 
 clf;
@@ -45,5 +47,5 @@ imsc(G);
 subp(3,3,8,0.01);
 imsc(GC);
 subp(3,3,9,0.01);
-imsc(E);
+imsc(abs(fft2(E)));
 %imsc(abs(fft2(G)));
