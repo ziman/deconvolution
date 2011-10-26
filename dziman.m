@@ -16,7 +16,7 @@ for t = 1:T
 	nE = C - GC;		% error of the convolution
 	nES = sum(sum(nE .* nE));
 
-	if nES < 1.2*ES 
+	if nES < ES 
 		if lg
 			e = e*g;
 		end;
