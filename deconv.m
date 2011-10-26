@@ -1,14 +1,23 @@
 % Original image
+I = double(imread('trails.jpg')) / 255;
+
 H = 0.01 * rand(100,100); H(40,60) = 1; H(70,10) = 1;
-%H = double(imread('lena100.jpg')) / 255;
+H = 0.299 * I(:,:,1) + 0.587 * I(:,:,2) + 0.114 * I(:,:,3);
 %H = zeros(2,2);
 
 % Convolution kernel
 %K = gkern(10, 10, 3, 3);
-K = ones(1,11); K = K/sum(K);
+%K = ones(1,11); K = K/sum(K);
+K = gkern(7,7,4,4);
+K = double(imread('trails-kernel.png')) / 255;
+%K = H(228:243,305:325);
+
+% Rotated kernel
+Ki = rot90(K,2);
 
 % Convolved image
 C = filter2(K,H);
+C = H;
 %C = double(imread('1va.jpg'))(:,:,2);
 %C = C - min(min(C));
 %C = C / max(max(C));
@@ -16,9 +25,9 @@ C = filter2(K,H);
 [rows cols] = size(C);
 
 % Iterative deconvolution, ziman
-e = 0.1;
+e = 0.001;
 g = 2;
-T = 100;
+T = 80;
 G = C;
 Et = zeros(T,3);
 GC = filter2(K,G);	% convolve the guess
@@ -27,14 +36,14 @@ ES = sum(sum(E .* E));
 lg = 0;
 tic;
 for t = 1:T
-	nG = G + e*filter2(K,E);	% correct the error
+	nG = G + e*filter2(Ki,E);	% correct the error
 	nG(nG < 0) = 0;		% prevent oscillations 
 
 	GC = filter2(K,nG);	% convolve the guess
 	nE = C - GC;		% error of the convolution
 	nES = sum(sum(nE .* nE));
 
-	if nES < ES 
+	if nES < 1.2*ES 
 		if lg
 			e = e*g;
 		end;
@@ -79,19 +88,13 @@ toc
 
 % Paint graphs
 clf;
-subp(3,2,1,0.01);
-imshow(H);
-subp(3,2,2,0.01);
+subp(2,3,1,0.01);
+imshow(G);
+subp(2,3,2,0.01);
 imshow(C);
 
-subp(3,2,3,0.01);
-imshow(G);
-subp(3,2,4,0.01);
+subp(2,3,3,0.01);
 imshow(GL);
-
-ax = subp(3,2,5,0.05);
+subp(2,1,2,0.02);
 plot(log(Et));
-p = get(ax, 'Position');
-p(3) = 0.94;
-set(ax, 'Position', p);
 legend('ziman','Richardson-Lucy','extension');
