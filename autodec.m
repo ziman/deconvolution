@@ -1,51 +1,46 @@
 % Original image
-I = double(imread('trails.jpg')) / 255;
-H = 0.299 * I(:,:,1) + 0.587 * I(:,:,2) + 0.114 * I(:,:,3);
+I = double(imread('andromeda2011.jpg')) / 255;
+%I = I(1:200,1:200,:);
+R = I(:,:,1);
+G = I(:,:,2);
+B = I(:,:,3);
+H = 0.299 * R + 0.587 * G + 0.114 * B;
 
 % Convolution kernel
-cepstrum = (abs(fft2(log(abs(fft2(H))))));
-cs = cepstrum(1:end);
-[r,c] = size(cepstrum);
-[jj ii] = meshgrid(1:c,1:r);
-w = ii .* jj;
-phiphi = atan((ii-1) ./ (jj-1));
-phiphi(isnan(phiphi)) = 0;
-cepstrum(1:2,1:2) = 0;
-cepstrum(r-1:r,c-1:c) = 0;
-cepstrum(r-1:r,1:2) = 0;
-cepstrum(1:2,c-1:c) = 0;
-cepstrum = (cepstrum - std(cs)) ./ mean(cs);
+a = 9;
+b = 6;
+K = gkern(a,a,b,b);
+K = double(imread('andromeda2011-kernel.png')) / 255;
+K = K ./ sum(sum(K));
 
-phi = sum(sum(w .* cepstrum .* phiphi)) / sum(sum(w .* cepstrum))
+Z = zeros(200,200);
+Z(100,100) = 1;
 
-r2 = floor(r/2);
-c2 = floor(c/2);
-sc =	[ cepstrum(r2+1:r,c2+1:c), cepstrum(r2+1:r,1:c2)
-	; cepstrum(1:r2,c2+1:c), cepstrum(1:r2,1:c2)];
-
-K = double(imread('trails-kernel.png')) / 255;
-
-T = 10;
-Et = zeros(T,3); G = C; GL = C;
+T = 20;
+Et = zeros(T,3); G = H; GL = H;
 
 %tic; [G, Et(:,1)] = dziman(H, K, T); toc
-tic; [GL, Et(:,2), TL] = dlucy(H, K, T, 1); toc
+%tic; [G, Et(:,1), TL] = dlucy(H, K, T, 1); toc
+tic; G = dlinear(H, K); toc
 
-Et(TL:T,3) = Et(TL,2);
+G = G + mean(I(1:end)) - mean(G(1:end));
+G = G .* std(I(1:end)) ./ std(G(1:end));
+G(G < 0) = 0;
+G(G > 1) = 1;
 
 % Paint graphs
 figure(1);
 clf;
 subp(2,3,1,0.01);
-imagesc(sc);
+F = Z;
+F = ffilter(K,F);
+imshow(F);
 subp(2,3,2,0.01);
-imshow(C);
-
+imshow(H);
 subp(2,3,3,0.01);
-imshow(GL);
+imshow(G);
 subp(2,1,2,0.02);
 plot(log(Et));
-legend('ziman','Richardson-Lucy','extension');
+legend('red','green','blue');
 
-figure(2);
-surf(cepstrum(1:10,1:10));
+imwrite(G,'and.png');
